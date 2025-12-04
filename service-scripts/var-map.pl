@@ -78,7 +78,7 @@ if (eval "defined(&map_with_$algo)") {
     if ($@) {
         print $@;
     } else {
-        compute_stats() unless $algo eq "snippy";
+        compute_stats() unless ($algo eq "snippy" || $algo eq "snippy_se");
         if ($vc && eval "defined(&call_variant_with_$vc)") {
             eval "&call_variant_with_$vc";
             print $@ if $@;
