@@ -78,7 +78,8 @@ if (eval "defined(&map_with_$algo)") {
     if ($@) {
         print $@;
     } else {
-        compute_stats() unless ($algo eq "snippy" || $algo eq "snippy_se");
+        #compute_stats() unless ($algo eq "snippy" || $algo eq "snippy_se");
+        compute_stats();
         if ($vc && eval "defined(&call_variant_with_$vc)") {
             eval "&call_variant_with_$vc";
             print $@ if $@;
@@ -127,6 +128,7 @@ sub call_variant_with_freebayes {
 }
 
 sub call_variant_with_snippy {
+    -s "var.snp.count"  or run("grep -v '^#' snippy_out/snps.raw.vcf |cut -f4 |grep -v 'N' |wc -l > var.snp.count");
     -s "var.vcf"        or run("ln -s -f snippy_out/snps.vcf var.vcf");
 }
 
@@ -155,14 +157,18 @@ sub compute_consensus {
 sub compute_stats {
     verify_cmd(qw(samtools bedtools));
     -s "ref.fa.fai"     or run("samtools faidx ref.fa");
-    -s "raw.flagstat"   or run("samtools flagstat aln.raw.sam > raw.flagstat");
-    -s "flagstat"       or run("samtools flagstat aln.bam > flagstat");
-    -s "stats"          or run("samtools stats aln.bam -c 1,8000,1 > stats");
-  # -s "depth"          or run("samtools depth aln.bam > depth");
-    -s "depth"          or run("bedtools genomecov -ibam aln.bam -d > depth");
-    -s "depth.hist"     or run("bedtools genomecov -ibam aln.bam > depth.hist");
-    -s "uncov.10"       or run("bedtools genomecov -ibam aln.bam -bga | perl -ne 'chomp; \@c=split/\t/; \$ln=\$c[2]-\$c[1]; print join(\"\\t\", \@c, \$ln).\"\\n\" if \$c[3]<10;' > uncov.10" );
-    # BED start position 0-based and the end position 1-based (Example: NC_000962,1987085,1987701,0,616; the 0 coverage base really starts at 1987086)
+    if (-s "aln.raw.sam") {
+      -s "raw.flagstat" or run("samtools flagstat aln.raw.sam > raw.flagstat");
+    }
+    if (-s "aln.bam") {
+      -s "flagstat"       or run("samtools flagstat aln.bam > flagstat");
+      -s "stats"          or run("samtools stats aln.bam -c 1,8000,1 > stats");
+      # -s "depth"          or run("samtools depth aln.bam > depth");
+      -s "depth"          or run("bedtools genomecov -ibam aln.bam -d > depth");
+      -s "depth.hist"     or run("bedtools genomecov -ibam aln.bam > depth.hist");
+      -s "uncov.10"       or run("bedtools genomecov -ibam aln.bam -bga | perl -ne 'chomp; \@c=split/\t/; \$ln=\$c[2]-\$c[1]; print join(\"\\t\", \@c, \$ln).\"\\n\" if \$c[3]<10;' > uncov.10" );
+      # BED start position 0-based and the end position 1-based (Example: NC_000962,1987085,1987701,0,616; the 0 coverage base really starts at 1987086)
+    }
 }
 
 sub map_with_bwa_mem {
@@ -402,7 +408,13 @@ sub summarize {
         my ($mapped, $frac) = `grep mapped raw.flagstat|head -n1` =~ /^(\d+).*?([0-9.]+%)/;
         $summary .= "Total reads              = $reads\n";
         $summary .= "Properly mapped reads    = $mapped ($frac)\n";
+    } elsif (-s "flagstat") {
+        my ($reads)         = `head -n1 flagstat` =~ /^(\d+)/;
+        my ($mapped, $frac) = `grep mapped flagstat|head -n1` =~ /^(\d+).*?([0-9.]+%)/;
+        $summary .= "Total reads              = $reads\n";
+        $summary .= "Properly mapped reads    = $mapped ($frac)\n";
     }
+        
     if (-s "depth") {
         my @covs       = map { chomp; $_ } `cut -f3 depth`;
         my $bases      = scalar@covs;
@@ -429,6 +441,10 @@ sub summarize {
     if (-s "var.fb.count") {
         my $raw_vars = `cat var.fb.count`;
         $summary .= "Raw FreeBayes variants   = $raw_vars";
+    }
+    if (-s "var.snp.count") {
+        my $raw_vars = `cat var.snp.count`;
+        $summary .= "Raw Snippy variants   = $raw_vars";
     }
     if (-s "var.vcf") {
         my $count = `grep -v "^#" var.vcf|wc -l`;
