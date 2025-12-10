@@ -396,7 +396,7 @@ sub map_with_snippy_se {
     verify_cmd(qw(snippy));
     -s "ref.fa"         or run_symlink($ref, "ref.fa");
     -s "read.fq"        or run_symlink($read1, "read.fq");
-    -s "snps.vcf"       or run("snippy --cpus $nthread --outdir snippy_out --cleanup --ref ref.fa --se read.fq");
+    -s "snps.vcf"       or run("snippy --cpus $nthread --outdir snippy_out --ref ref.fa --se read.fq");
     -s "aln.bam"        or run("ln -s -f snippy_out/snps.bam aln.bam");
     -s "aln.bam.bai"    or run("ln -s -f snippy_out/snps.bam.bai aln.bam.bai");
 }
