@@ -166,7 +166,11 @@ sub compute_stats {
       # -s "depth"          or run("samtools depth aln.bam > depth");
       -s "depth"          or run("bedtools genomecov -ibam aln.bam -d > depth");
       -s "depth.hist"     or run("bedtools genomecov -ibam aln.bam > depth.hist");
+      -s "cov.bedgraph"   or run("bedtools genomecov -ibam aln.bam -bga > cov.bedgraph");
       -s "uncov.10"       or run("bedtools genomecov -ibam aln.bam -bga | perl -ne 'chomp; \@c=split/\t/; \$ln=\$c[2]-\$c[1]; print join(\"\\t\", \@c, \$ln).\"\\n\" if \$c[3]<10;' > uncov.10" );
+      -s "ref.fa.fai"     or run ("samtools faidx ref.fa");
+      -s "chrom.sizes"     or run ("cut -f1,2 ref.fa.fai > chrom.sizes");
+      -s "cov.bigwig"     or run ("bedGraphToBigWig cov.bedgraph chrom.sizes cov.bigwig");
       # BED start position 0-based and the end position 1-based (Example: NC_000962,1987085,1987701,0,616; the 0 coverage base really starts at 1987086)
     }
 }

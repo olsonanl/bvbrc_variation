@@ -273,6 +273,7 @@ sub process_variation_data {
         # system("cp $tmpdir/$_/var.annotated.raw.tsv $tmpdir/$_.var.annotated.tsv") if ! -s "$tmpdir/$_/var.annotated.tsv" && -s "$tmpdir/$_/var.annotated.raw.tsv";
         # system("cp $tmpdir/$_/var.snpEff.vcf $tmpdir/$_.var.snpEff.vcf") if -s "$tmpdir/$_/var.snpEff.vcf";
 
+        cp_if_present("$tmpdir/$_/cov.bigwig", "$tmpdir/$_.cov.bigwig");
         cp_if_present("$tmpdir/$_/var.vcf", "$tmpdir/$_.var.vcf");
         cp_if_present("$tmpdir/$_/var.vcf.gz", "$tmpdir/$_.var.vcf.gz");
         cp_if_present("$tmpdir/$_/var.vcf.gz.tbi", "$tmpdir/$_.var.vcf.gz.tbi");
@@ -368,6 +369,7 @@ sub process_variation_data {
     push @outputs, map { [ $_, 'vcf' ] } glob("$tmpdir/*.vcf");
     push @outputs, map { [ $_, 'html'] } glob("$tmpdir/*.html");
     push @outputs, map { [ $_, 'bam' ] } glob("$tmpdir/*.bam");
+    push @outputs, map { [ $_, 'bigwig' ] } glob("$tmpdir/*.bigwig");
     push @outputs, map { [ $_, 'contigs' ] } glob("$tmpdir/*.consensus.fa");
     push @outputs, map { [ $_, 'unspecified' ] } glob("$tmpdir/*.tbi $tmpdir/*.vcf.gz $tmpdir/*.bam.bai");
 
