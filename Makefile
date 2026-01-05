@@ -29,15 +29,21 @@ TPAGE_ARGS = --define kb_top=$(TARGET) --define kb_runtime=$(DEPLOY_RUNTIME) --d
 
 all: bin 
 
-bin: $(BIN_PERL) $(BIN_SERVICE_PERL)
+bin: $(BIN_PERL) $(BIN_SERVICE_PERL) $(BIN_DIR)/bedGraphToBigWig
+
+$(BIN_DIR)/bedGraphToBigWig:
+	curl -o $@ -L https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedGraphToBigWig
+	chmod a+x $@
 
 deploy: deploy-all
 deploy-all: deploy-client 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
-deploy-service: deploy-libs deploy-scripts deploy-service-scripts deploy-specs
+deploy-service: deploy-libs deploy-scripts deploy-service-scripts deploy-specs deploy-helper
 
-
+deploy-helper: $(BIN_DIR)/bedGraphToBigWig
+	rm -f $(TARGET)/bin/bedGraphToBigWig
+	cp $(BIN_DIR)/bedGraphToBigWig $(TARGET)/bin/bedGraphToBigWig
 deploy-dir:
 	if [ ! -d $(SERVICE_DIR) ] ; then mkdir $(SERVICE_DIR) ; fi
 	if [ ! -d $(SERVICE_DIR)/bin ] ; then mkdir $(SERVICE_DIR)/bin ; fi
